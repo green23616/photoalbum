@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useRecoilValue } from "recoil"
+import { useMemo, useState } from "react"
+import { useRecoilValueLoadable } from "recoil"
 // Pages
 import { imageData } from "../../store/selectors/imageSelector"
 import CommonFooter from "../../components/common/footer/CommonFooter"
@@ -8,6 +8,7 @@ import CommonNavigation from "../../components/common/navigation/CommonNavigatio
 import CommonSearchBar from "../../components/common/searchBar/CommonSearchBar"
 import Card from "./components/Card"
 import DetailDialog from "../../components/common/dialog/DetailDialog"
+import Loading from "./components/Loading"
 // CSS
 import styles from "./styles/index.module.scss"
 // Type
@@ -15,14 +16,22 @@ import { CardDTO } from "./types/card"
 
 function Index() {
 
-  const storeImage = useRecoilValue(imageData)
+  // const storeImage = useRecoilValue(imageData)
+  const storeImage = useRecoilValueLoadable(imageData)
   const [imgData, setImgData] = useState<CardDTO>()
   const [open, setOpen] = useState(false) //이미지 상세 다이얼로그 발생 State
 
-  const CARD_LIST = storeImage?.data.results.map((card:CardDTO) => {
-    return <Card data={card} key={card.id} handleDialog={setOpen} handleSetData={setImgData}/>
-  })
-  
+  const CARD_LIST = useMemo(() => {
+    if (storeImage.state === 'hasValue') {
+      const result = storeImage.contents.results.map((card:CardDTO) => {
+        return <Card data={card} key={card.id} handleDialog={setOpen} handleSetData={setImgData}/>
+      })
+      return result
+    } else {
+      return <Loading/>
+    }
+  },[storeImage])
+
   return (
     <div className={styles.index}>
       {/* HEADER UI */}
